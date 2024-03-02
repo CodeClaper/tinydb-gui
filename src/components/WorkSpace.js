@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Controlled as CodeMirror} from 'react-codemirror2';
 import { Button } from 'primereact/button'
-import { TabView, TabPanel } from 'primereact/tabview'
+import Loading from 'react-loading'
+
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 import 'codemirror/mode/javascript/javascript'
@@ -9,7 +10,6 @@ import 'codemirror/mode/sql/sql'
 import '@codemirror/lang-json'
 import '@codemirror/lang-sql'
 import '@codemirror/lint'
-
 import 'codemirror/addon/display/autorefresh'
 import 'codemirror/addon/edit/closebrackets'
 import 'codemirror/addon/edit/closetag'
@@ -25,17 +25,20 @@ function WorkSpace() {
     const [sql, setSql] = useState('')
     const [json, setJson] = useState('{}')
     const [message, setMessage] = useState('')
+    const [isLoding, setIsLoding] = useState(false)
     const sqlRef = useRef(null)
     const execSql = () => {
+        setIsLoding(true)
         ipcRenderer.invoke('execSql', sql)
     }
     useEffect(() => {
-        ipcRenderer.receive('data', (event, message) => {
-            handleResp(message)
-        })
         if (sqlRef.current) {
             sqlRef.current.editor.focus()
         }
+        ipcRenderer.receive('data', (event, message) => {
+            handleResp(message)
+            setIsLoding(false)
+        })
     }, [])
     const onJsonChange = (editor, data, value) => {
         setJson(value)
@@ -80,29 +83,35 @@ function WorkSpace() {
                 />
                 <Button label="执行" onClick={ execSql } size="small" style={{ marginLeft: '10px'}}/>
             </div>
-            <CodeMirror
-                className='json-space'
-                value={json}
-                options={{
-                    lineNumbers: true,
-                    mode: { name : 'application/json', json: true, statementIndent: 2},
-                    theme: 'default',
-                    gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers', 'CodeMirror-lint-markers'],
-                    lint: true,
-                    lineWrapping: false,
-                    identWithTabs: false,
-                    autoCloseTags: true,
-                    autoCloseBrackets: true,
-                    matchBrackets: true,
-                    matchTags: true,
-                    tabSize: 2,
-                    readOnly: true
-                }}
-                onBeforeChange={ onchange }
-            />
-            <div className='message-space'>
-                <textarea value={message} readOnly className='message-input'/>
-            </div>
+            { isLoding && (<div className='loading-json-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
+            { !isLoding && (
+                <CodeMirror
+                    className='json-space'
+                    value={json}
+                    options={{
+                        lineNumbers: true,
+                        mode: { name : 'application/json', json: true, statementIndent: 2},
+                        theme: 'default',
+                        gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers', 'CodeMirror-lint-markers'],
+                        lint: true,
+                        lineWrapping: false,
+                        identWithTabs: false,
+                        autoCloseTags: true,
+                        autoCloseBrackets: true,
+                        matchBrackets: true,
+                        matchTags: true,
+                        tabSize: 2,
+                        readOnly: true
+                    }}
+                    onBeforeChange={ onchange }
+                />
+            )}
+            { isLoding && (<div className='loading-message-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
+            { !isLoding && (
+                <div className='message-space'>
+                    <textarea value={message} readOnly className='message-input'/>
+                </div>
+            )}
         </div>
     )
 }

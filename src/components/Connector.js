@@ -3,8 +3,9 @@ import { faDatabase } from '@fortawesome/free-solid-svg-icons'
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
+import { Toast } from 'primereact/toast'
 import { InputNumber } from 'primereact/inputnumber'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFormik } from 'formik'
 import ConnContext from './ConnContext'
 const ipcRenderer = window.ipcRender
@@ -13,7 +14,7 @@ function Connector({visible, onHidden}) {
     const [conn, setConn] = useState({})
     const formik = useFormik({
         initialValues: {
-            name: 'prod',
+            name: 'dev',
             host: '127.0.0.1',
             port: 4083
         },
@@ -21,6 +22,7 @@ function Connector({visible, onHidden}) {
             setConn(data)
         }
     })
+    const toast = useRef(null)
     const tryConnect = async () => {
         await formik.handleSubmit()
         await ipcRenderer.invoke('createSocket', conn)
@@ -32,10 +34,14 @@ function Connector({visible, onHidden}) {
     }
     useEffect(() => {
         ipcRenderer.receive('connect', (event, message) => {
-            alert('OKOK')
+            toast.current.show(
+                { severity: 'success', summary: 'Info', detail: '连接数据库成功'}
+            )
         })
         ipcRenderer.receive('error', (event, message) => {
-            alert('Bad')
+            toast.current.show(
+                { severity: 'error', summary: 'Info', detail: '连接数据库失败'}
+            )
         })
     }, [])
     return (
@@ -54,7 +60,7 @@ function Connector({visible, onHidden}) {
                         </div>
                         <div className="flex flex-column gap-2" style={{ display: 'flex', flexDirection: 'column', marginTop: '10px'}}>
                             <label htmlFor="port">端口</label>
-                            <InputNumber id="port" value={formik.values.port} onChange={(e) => formik.setFieldValue('port', e.target.value)} aria-describedby="port-help" className="p-inputtext-sm" useGrouping={false} />
+                            <InputNumber id="port" value={formik.values.port} onChange={(e) => formik.setFieldValue('port', e.value)} aria-describedby="port-help" className="p-inputtext-sm" useGrouping={false} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: '10px', gap: '10px'}}>
                             <Button label="测试连接" severity="secondary" outlined size="small" style={{ width: '200px'}} onClick={ tryConnect }/>
@@ -66,6 +72,7 @@ function Connector({visible, onHidden}) {
                     </div>
                 </form>
             </Dialog>
+            <Toast ref={toast} />
         </ConnContext.Provider>
     )
 }

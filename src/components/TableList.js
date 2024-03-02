@@ -15,6 +15,10 @@ function TableList() {
         }
         return list
     }
+    const onselect = (event) => {
+        const sql = 'select * from ' + event.node.label
+        ipcRenderer.invoke('execSql', sql)
+    }
     useEffect(() => {
         ipcRenderer.receive('tables', (event, message) => {
             setNodes(adapt(JSON.parse(message).data))
@@ -22,7 +26,7 @@ function TableList() {
     }, [])
     return (
         <div className="card flex justify-content-center left-side">
-            <Tree filter filterMode="lenient" value={nodes} className="w-full md:w-30rem table-list"/>
+            <Tree filter filterMode="lenient" value={nodes} selectionMode="single" onSelect={onselect} className="w-full md:w-30rem table-list"/>
         </div>
     )
 }

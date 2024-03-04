@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import MenuButton from "./MenuButton"
-import { faLink, faTable } from '@fortawesome/free-solid-svg-icons'
+import { faLink, faSquarePlus, faMagnifyingGlassPlus } from '@fortawesome/free-solid-svg-icons'
 import Connector from "./Connector"
 
 function TopBar() {
@@ -16,7 +16,18 @@ function TopBar() {
         {
             id: "002",
             name: "新建查询",
-            icon: faTable,
+            icon: faMagnifyingGlassPlus,
+            onClick: () => {
+                window.workers.push({
+                    id: '001',
+                    name: '查询'
+                })
+            }
+        },
+        {
+            id: "003",
+            name: "新建表",
+            icon: faSquarePlus,
             onClick: () => {}
         }
     ]

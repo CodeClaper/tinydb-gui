@@ -28,8 +28,12 @@ function WorkSpace() {
     const [isLoding, setIsLoding] = useState(false)
     const sqlRef = useRef(null)
     const execSql = () => {
-        setIsLoding(true)
-        ipcRenderer.invoke('execSql', sql)
+        if (window.conn && window.conn.connected) {
+            setIsLoding(true)
+            ipcRenderer.invoke('execSql', sql)
+        } else {
+            alert('请先连接数据库')
+        }
     }
     useEffect(() => {
         if (sqlRef.current) {
@@ -40,9 +44,6 @@ function WorkSpace() {
             setIsLoding(false)
         })
     }, [])
-    const onJsonChange = (editor, data, value) => {
-        setJson(value)
-    }
     const onSqlChnage = (editor, data, value) => {
         setSql(value)
     }

@@ -4,6 +4,7 @@ const isDev = require('electron-is-dev')
 const { installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer')
 const { ipcMain } = require('electron')
 const net = require('net')
+var socket = undefined
 
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -40,30 +41,39 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
 })
 
+
 /**
- * Create Socket Client.
+ * New Socket.
  */
-ipcMain.handle('createSocket', (event, message) => {
-    console.log(message)
-    const socket = new net.Socket()
-    socket.connect(message.port, message.host)
+const newSocket = (event, conn) => {
+    socket = new net.Socket()
+    socket.connect(conn.port, conn.host)
     socket.on('connect', () => {
-        socketClient = socket
-        event.sender.send("connect", "Connected")
+        event.sender.send("connect", "数据库连接成功")
     })
     socket.on('error', () => {
-        event.sender.send("error", "Conntect fail")
+        event.sender.send("error", "数据库连接失败")
     })
-    socket.end()
+}
+
+/**
+ * Create Socket Client Listener
+ */
+ipcMain.handle('createSocket', (event, message) => {
+    newSocket(event, message)
 })
 
+/**
+ * Show tables to get all tables info.
+ */
 ipcMain.handle('showTables', (event, message) => {
-    const socket = new net.Socket()
-    socket.connect(4083, '127.0.0.1')
-    socket.write("show tables")
     var buffer = ''
+    if (!socket) {
+        newSocket(event, message)
+    }
+    socket.write("show tables")
     socket.on('data', (buff) => {
-        var str = clearBuffer(buff)
+        var str = cleanBuffer(buff)
         if (str.toUpperCase().endsWith("OVER")) {
             buffer = buffer.concat(str.replace("OVER", ""))
             event.sender.send('tables', buffer)
@@ -73,28 +83,38 @@ ipcMain.handle('showTables', (event, message) => {
         else
             buffer = buffer.concat(str)
     })
-})
-
-
-ipcMain.handle('execSql', (event, message) => {
-    const socket = new net.Socket()
-    socket.connect(4083, '127.0.0.1')
-    socket.write(message)
-    var buffer = ''
-    socket.on('data', (buff) => {
-        var str = clearBuffer(buff)
-        if (str.toUpperCase().endsWith("OVER")) {
-            buffer = buffer.concat(str.replace("OVER", ""))
-            event.sender.send('data', buffer)
-            buffer = ''
-            str = ''
-        }
-        else
-            buffer = buffer.concat(str)
+    socket.on('error', () => {
+        event.sender.send("error", "数据库连接失败")
     })
 })
 
-function clearBuffer(buff) {
+/**
+ * Execute Sql
+ * */
+ipcMain.handle('execSql', (event, message) => {
+    var buffer = ''
+    if (socket) {
+        socket.write(message)
+        socket.removeAllListeners('data')
+        socket.on('data', (buff) => {
+            var str = cleanBuffer(buff)
+            if (str.toUpperCase().endsWith("OVER")) {
+                buffer = buffer.concat(str.replace("OVER", ""))
+                event.sender.send('data', buffer)
+                buffer = ''
+                str = ''
+            }
+            else
+                buffer = buffer.concat(str)
+        })
+    }
+})
+
+
+/**
+ * Clean buffer and Get String. 
+ */
+function cleanBuffer(buff) {
     var resultBuffer = Buffer.alloc(0);
 
     for (let i = 0; i < buff.length; i++) {

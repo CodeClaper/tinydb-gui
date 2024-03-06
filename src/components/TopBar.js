@@ -2,8 +2,9 @@ import React, { useState } from "react"
 import MenuButton from "./MenuButton"
 import { faLink, faSquarePlus, faMagnifyingGlassPlus } from '@fortawesome/free-solid-svg-icons'
 import Connector from "./Connector"
+import { guid } from "../utils/guid"
 
-function TopBar() {
+function TopBar(props) {
     const [visible, setVisible] = useState(false)
     const menuList = [
         { 
@@ -18,8 +19,8 @@ function TopBar() {
             name: "新建查询",
             icon: faMagnifyingGlassPlus,
             onClick: () => {
-                window.workers.push({
-                    id: '001',
+                props.addWork({
+                    id: guid(),
                     name: '查询'
                 })
             }

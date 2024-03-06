@@ -135,6 +135,12 @@
     user-select: none;
 }
 
+.menu-button:hover {
+    color: #409eff;
+    border-color: #c6e2ff;
+    background-color: #ecf5ff;
+}
+
 .center {
     display: flex;
     flex-direction: column;

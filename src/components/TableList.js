@@ -16,7 +16,7 @@ function TableList() {
         return list
     }
     const onselect = (event) => {
-        const sql = 'select * from ' + event.node.label
+        const sql = 'describe ' + event.node.label
         ipcRenderer.invoke('execSql', sql)
     }
     useEffect(() => {

@@ -1,7 +1,6 @@
 const { app, BrowserWindow } = require('electron/main')
 const path = require('path')
 const isDev = require('electron-is-dev')
-const { installExtension, REDUX_DEVTOOLS } = require('electron-devtools-installer')
 const { ipcMain } = require('electron')
 const net = require('net')
 var socket = undefined
@@ -13,7 +12,7 @@ const createWindow = () => {
         minWidth: 600,
         minHeight: 400,
         webPreferences: {
-            preload: path.join(__dirname, '../preload.js'),
+            preload: path.join(__dirname, './preload.js'),
             nodeIntegration: true,
             contextIsolation: true,
             enableWebSQL: true,
@@ -31,10 +30,6 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
     createWindow()
-    installExtension(REDUX_DEVTOOLS)
-        .then((name) => console.log(`Added Extension:  ${name}`))
-        .catch((err) => console.log('An error occurred: ', err));
-
 })
 
 app.on('window-all-closed', () => {
@@ -53,6 +48,12 @@ const newSocket = (event, conn) => {
     })
     socket.on('error', () => {
         event.sender.send("error", "数据库连接失败")
+    })
+    socket.on('close', () => {
+        event.sender.send("close", "远程数据库关闭连接")
+    })
+    socket.on('end', () => {
+        event.sender.send("end", "连接关闭")
     })
 }
 

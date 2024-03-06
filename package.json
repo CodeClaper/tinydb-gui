@@ -1,20 +1,64 @@
 {
   "name": "tinydb-gui",
   "version": "1.0.0",
+  "icon": "favicon-32x32.png",
   "description": "This tinydb gui client.",
-  "main": "public/main.js",
+  "main": "main.js",
   "homepage": "./",
+  "author": "jerry zhou <jerryzhou.zc@gmail.com>",
+  "license": "MIT",
   "scripts": {
     "react-start": "react-scripts start",
     "react-build": "react-scripts build",
     "react-test": "react-scripts test",
     "react-eject": "react-scripts eject",
+    "electron-build": "electron-builder",
     "build": "npm run react-build && npm run electron-build",
     "start": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "electron": "electron ."
   },
-  "author": "jerry zhou",
-  "license": "MIT",
+  "build": {
+    "appId": "tinydb-gui",
+    "productName": "tinydb-gui",
+    "extends": null,
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "asar": false,
+    "files": [
+      "dist/**/*",
+      "build/**/*",
+      "public/*",
+      "main.js",
+      "preload.js",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ]
+    },
+    "win": {
+      "target": "squirrel",
+      "icon": "build/images/favicon.ico"
+    }
+  },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-sql": "^6.6.0",
@@ -25,6 +69,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
+    "antd": "^5.15.0",
     "classnames": "^2.5.1",
     "codemirror": "^5.65.16",
     "cross-env": "^7.0.3",
@@ -50,7 +95,6 @@
     "concurrently": "^8.2.2",
     "electron": "^29.1.0",
     "electron-builder": "^22.11.7",
-    "electron-devtools-installer": "^3.2.0",
     "wait-on": "^7.2.0"
   },
   "browserslist": {

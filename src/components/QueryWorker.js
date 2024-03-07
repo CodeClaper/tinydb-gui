@@ -43,6 +43,7 @@ function QueryWork({worker, updateWorker}) {
             )
         }
     }
+
     const onSqlChange = (editor, data, value) => {
         worker.sql = value
         updateWorker(worker)
@@ -69,21 +70,20 @@ function QueryWork({worker, updateWorker}) {
         if (sqlRef.current) {
             sqlRef.current.editor.focus()
         }
-    }, [])
+    }, [worker])
     useEffect(() => {
         ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
             handleResp(message)
             worker.isLoading = false
             updateWorker(worker)
         })
-    }, [])
+    }, [worker])
     useEffect(() => {
         if (worker.trigger) {
-            execSql()
             worker.trigger = false
-            updateWorker(worker)
+            execSql()
         }
-    })
+    }, [worker])
     return (
         <>
             <div className="sql-space">

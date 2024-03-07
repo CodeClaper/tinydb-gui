@@ -3,7 +3,8 @@ import { Tabs, Empty } from 'antd'
 
 function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
     const onEdit = (targetKey, action) => {
-        if (action === 'remove')
+        console.log(action, targetKey)
+        if (action === 'remove') 
             removeWorker(targetKey)
     }
     return (

@@ -29,12 +29,14 @@ function Home() {
 
     /* Update the worker. */
     const updateWorker = (worker) => {
+        debugger
         const newWorkers = workers.map(it => {
             if (it.key === worker.key)
                 return worker
             else
                 return it
         })
+        console.log(newWorkers.length)
         setWorkers(newWorkers)
     }
 

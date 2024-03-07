@@ -21,42 +21,31 @@ import 'codemirror/addon/fold/foldgutter'
 import 'codemirror/addon/fold/brace-fold'
 import 'codemirror/addon/fold/foldgutter.css'
 
-const  ipcRenderer = window.ipcRender
+const ipcRenderer = window.ipcRender
 
-function QueryWork() {
-    const [sql, setSql] = useState('')
-    const [json, setJson] = useState('{}')
-    const [message, setMessage] = useState('')
-    const [isLoding, setIsLoding] = useState(false)
+function QueryWork({worker, updateWorker}) {
     const toast = useRef(null)
     const sqlRef = useRef(null)
     const execSql = () => {
         if (window.conn && window.conn.connected) {
-            if (sql === '') {
+            if (worker.sql === '') {
                 toast.current.show(
                     { severity: 'error', summary: 'Info', detail: '请先输入查询语句' }
                 )
                 return
             }
-            setIsLoding(true)
-            ipcRenderer.invoke('execSql', sql)
+            worker.isLoading = true
+            updateWorker(worker)
+            ipcRenderer.invoke('execSql', worker)
         } else {
             toast.current.show(
                 { severity: 'error', summary: 'Info', detail: '请先连接数据库' }
             )
         }
     }
-    useEffect(() => {
-        if (sqlRef.current) {
-            sqlRef.current.editor.focus()
-        }
-        ipcRenderer.receive('data', (event, message) => {
-            handleResp(message)
-            setIsLoding(false)
-        })
-    }, [])
-    const onSqlChnage = (editor, data, value) => {
-        setSql(value)
+    const onSqlChange = (editor, data, value) => {
+        worker.sql = value
+        updateWorker(worker)
     }
     const handleResp = (body) => {
         if (body === '')
@@ -64,26 +53,44 @@ function QueryWork() {
         try {
             const jsonBody = JSON.parse(body)
             if (jsonBody.success)
-                setJson(JSON.stringify(jsonBody.data, null, '\t'))
+                worker.data = JSON.stringify(jsonBody.data, null, '\t')
             else
-                setJson('{}')
+                worker.data = '{}'
             const msg = '结果: ' + (jsonBody.success ? 'OK' : 'ERROR') + '\n' +
                         '信息: ' + jsonBody.message + '\n' +
                         '用时: ' + jsonBody.duration + 's\n' + 
                         (jsonBody.rows ? '行数: ' + jsonBody.rows : '') 
-            setMessage(msg)
+            worker.message = msg
         } catch (err) {
-
+            worker.message = err
         }
     }
-
+    useEffect(() => {
+        if (sqlRef.current) {
+            sqlRef.current.editor.focus()
+        }
+    }, [])
+    useEffect(() => {
+        ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
+            handleResp(message)
+            worker.isLoading = false
+            updateWorker(worker)
+        })
+    }, [])
+    useEffect(() => {
+        if (worker.trigger) {
+            execSql()
+            worker.trigger = false
+            updateWorker(worker)
+        }
+    })
     return (
         <>
             <div className="sql-space">
                 <CodeMirror
                     className="sql-input"
                     ref={sqlRef}
-                    value={sql}
+                    value={worker.sql}
                     options={{
                         mode: 'text/x-sql',
                         theme: 'default',
@@ -92,15 +99,15 @@ function QueryWork() {
                         autoRefresh: false,
                         lineWrapping: true
                     }}
-                    onBeforeChange={onSqlChnage}
+                    onBeforeChange={onSqlChange}
                 />
                 <Button label="执行" onClick={ execSql } size="small" style={{ marginLeft: '10px'}}/>
             </div>
-            { isLoding && window.conn.connected && (<div className='loading-json-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
-            { (!isLoding || !window.conn.connected) && (
+            { worker.isLoading && window.conn.connected && (<div className='loading-json-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
+            { (!worker.isLoading || !window.conn.connected) && (
                 <CodeMirror
                     className='json-space'
-                    value={json}
+                    value={worker.data}
                     options={{
                         lineNumbers: true,
                         mode: { name : 'application/json', json: true, statementIndent: 2},
@@ -116,13 +123,12 @@ function QueryWork() {
                         tabSize: 2,
                         readOnly: true
                     }}
-                    onBeforeChange={ onchange }
                 />
             )}
-            { isLoding && (<div className='loading-message-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
-            { !isLoding && (
+            { worker.isLoading && (<div className='loading-message-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
+            { !worker.isLoading && (
                 <div className='message-space'>
-                    <textarea value={message} readOnly className='message-input'/>
+                    <textarea value={worker.message} readOnly className='message-input'/>
                 </div>
             )}
             <Toast ref={toast} />

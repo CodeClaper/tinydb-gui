@@ -1,8 +1,10 @@
 import { Tree } from "primereact/tree"
+import { guid } from "../utils/guid"
 import { useEffect, useState } from "react"
-const  ipcRenderer = window.ipcRender
 
-function TableList() {
+const ipcRenderer = window.ipcRender
+
+function TableList({tableSelect}) {
     const[nodes, setNodes] = useState([])
     const adapt = (data) => {
         const list = []
@@ -16,8 +18,8 @@ function TableList() {
         return list
     }
     const onselect = (event) => {
-        const sql = 'describe ' + event.node.label
-        ipcRenderer.invoke('execSql', sql)
+        const tableName = event.node.label
+        tableSelect(tableName)
     }
     useEffect(() => {
         ipcRenderer.receive('tables', (event, message) => {

@@ -95,13 +95,13 @@ ipcMain.handle('showTables', (event, message) => {
 ipcMain.handle('execSql', (event, message) => {
     var buffer = ''
     if (socket) {
-        socket.write(message)
+        socket.write(message.sql)
         socket.removeAllListeners('data')
         socket.on('data', (buff) => {
             var str = cleanBuffer(buff)
             if (str.toUpperCase().endsWith("OVER")) {
                 buffer = buffer.concat(str.replace("OVER", ""))
-                event.sender.send('data', buffer)
+                event.sender.send(`${message.key}_data`, buffer)
                 buffer = ''
                 str = ''
             }

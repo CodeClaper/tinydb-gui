@@ -1,42 +1,33 @@
 import QueryWork from "./QueryWorker"
-import { Tabs } from 'antd'
-import { useState } from "react"
+import { Tabs, Empty } from 'antd'
 
-function WorkSpace() {
-    const [activeKey, setActiveKey] = useState('')
-    const [items, setItems] = useState([])
-    const onChange = (key) => {
-        setActiveKey(key)
-    }
-    const add = () => {
-        setItems([...items, {}])
-    }
-    const remove = (targetKey) => {
-        const targetIndex = items.findIndex((pane) => pane.key === targetKey)
-        const newPanes = items.filter((it) => it.key !== targetKey)
-        if (newPanes.length && targetKey === activeKey) {
-            const { key } = newPanes[targetIndex === newPanes.length ? targetIndex - 1 : targetIndex]
-            setActiveKey(key)
-        }
-        setItems(newPanes)
-    }
+function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
     const onEdit = (targetKey, action) => {
-        if (action === 'add')
-            add()
-        else
-            remove(targetKey)
+        if (action === 'remove')
+            removeWorker(targetKey)
     }
     return (
         <div className="work-space">
-            <Tabs
-                hideAdd
-                onChange={onChange}
-                activeKey={activeKey}
-                type="editable-card"
-                onEdit={onEdit}
-                items={items}
-            />
-            <QueryWork/>
+            {
+                workers.length > 0 && (
+                    <>
+                        <Tabs
+                            hideAdd
+                            onChange={onChange}
+                            activeKey={activeKey}
+                            type="editable-card"
+                            onEdit={onEdit}
+                            items={workers}
+                        />
+                        {
+                            workers.map(worker => { return activeKey === worker.key && <QueryWork key={worker.key} worker={worker} updateWorker={updateWorker}/>})
+                        }
+                    </>
+                )
+            }
+            {
+                workers.length == 0 && (<div className="center full"><Empty description={false}/></div>)
+            }
         </div>
     )
 }

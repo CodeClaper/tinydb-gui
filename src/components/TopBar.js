@@ -4,7 +4,7 @@ import { faLink, faSquarePlus, faMagnifyingGlassPlus } from '@fortawesome/free-s
 import Connector from "./Connector"
 import { guid } from "../utils/guid"
 
-function TopBar(props) {
+function TopBar({addWorker}) {
     const [visible, setVisible] = useState(false)
     const menuList = [
         { 
@@ -19,9 +19,14 @@ function TopBar(props) {
             name: "新建查询",
             icon: faMagnifyingGlassPlus,
             onClick: () => {
-                props.addWork({
-                    id: guid(),
-                    name: '查询'
+                addWorker({
+                    key: guid(),
+                    label: ' 查询 ',
+                    type: 'QUERY',
+                    sql: '',
+                    data: '',
+                    message: '',
+                    isLoading: false
                 })
             }
         },
@@ -29,7 +34,13 @@ function TopBar(props) {
             id: "003",
             name: "新建表",
             icon: faSquarePlus,
-            onClick: () => {}
+            onClick: () => {
+                addWorker({
+                    key: guid(),
+                    label: ' 新建表 ',
+                    type: 'CREATE'
+                })
+            }
         }
     ]
     const menuBottonList = menuList.map(it => {

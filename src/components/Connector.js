@@ -40,7 +40,7 @@ function Connector({visible, onHidden}) {
                 </div>
                 <div className="flex flex-column gap-2" style={{ display: 'flex', flexDirection: 'column', marginTop: '10px'}}>
                     <label htmlFor="host">主机</label>
-                    <InputText id="host" value={ host } onChange={(e) => setHost(e.target.host)} aria-describedby="name-help" className="p-inputtext-sm"/>
+                    <InputText id="host" value={ host } onChange={(e) => setHost(e.target.value)} aria-describedby="name-help" className="p-inputtext-sm"/>
                 </div>
                 <div className="flex flex-column gap-2" style={{ display: 'flex', flexDirection: 'column', marginTop: '10px'}}>
                     <label htmlFor="port">端口</label>

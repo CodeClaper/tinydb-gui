@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Message from "./Message"
 import TableList from "./TableList"
 import TopBar from "./TopBar"
@@ -13,8 +13,8 @@ function Home() {
 
     /* Add a worker, may be QueryWorker or CreateTableWorker. */
     const addWorker = (worker) => {
-        setWorkers([...workers, worker])
         setActiveKey(worker.key)
+        setWorkers([...workers, worker])
     }
 
     /* Remove the worker. */
@@ -30,13 +30,13 @@ function Home() {
 
     /* Update the worker. */
     const updateWorker = (worker) => {
-        const newWorkers = workers.map(it => {
+        if (!worker) return
+        const newWorkers = workers.map((it) => {
             if (it.key === worker.key)
                 return worker
             else
                 return it
         })
-        console.log(newWorkers.length)
         setWorkers(newWorkers)
     }
 
@@ -65,17 +65,18 @@ function Home() {
     const onChange = (key) => {
         setActiveKey(key)
     }
+
     return (
         <>
             <div className="home">
-                <TopBar addWorker = {addWorker}/>
-                <div className ="main-body">
-                    <TableList tableSelect={tableSelect}/>
-                    <WorkSpace activeKey={activeKey}  workers={workers} removeWorker={removeWorker} onChange={onChange} updateWorker={updateWorker}/>
+                <TopBar addWorker={addWorker} />
+                <div className="main-body">
+                    <TableList tableSelect={tableSelect} />
+                    <WorkSpace activeKey={activeKey} workers={workers} removeWorker={removeWorker} onChange={onChange} updateWorker={updateWorker} />
                 </div>
-                <StatusLine connected={window.conn && window.conn.connected}/>
+                <StatusLine connected={window.conn && window.conn.connected} />
             </div>
-            <Message reload={updateWorker}/>
+            <Message reload={updateWorker} />
         </>
     )
 }

@@ -71,13 +71,12 @@ function QueryWork({worker, updateWorker}) {
             sqlRef.current.editor.focus()
         }
     }, [worker])
-    useEffect(() => {
-        ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
-            handleResp(message)
-            worker.isLoading = false
-            updateWorker(worker)
-        })
-    }, [worker])
+
+    ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
+        handleResp(message)
+        worker.isLoading = false
+        updateWorker(worker)
+    })
     useEffect(() => {
         if (worker.trigger) {
             worker.trigger = false

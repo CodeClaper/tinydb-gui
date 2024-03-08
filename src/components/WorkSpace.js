@@ -4,7 +4,6 @@ import { Tabs, Empty } from 'antd'
 
 function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
     const onEdit = (targetKey, action) => {
-        console.log(action, targetKey)
         if (action === 'remove') 
             removeWorker(targetKey)
     }
@@ -23,7 +22,7 @@ function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
                         />
                         {
                             workers.map(worker => { return activeKey === worker.key 
-                                && ((worker.type === 'QUERY' || worker.type === 'SELECTION') && <QueryWork key={worker.key} worker={worker} updateWorker={updateWorker}/> || worker.type === 'CREATE' && <CreateTableWorker/>)})
+                                && ((worker.type === 'QUERY' || worker.type === 'SELECTION') && <QueryWork key={worker.key} worker={worker} updateWorker={updateWorker}/> || worker.type === 'CREATE' && <CreateTableWorker key={worker.key}/>)})
                         }
                     </>
                 )

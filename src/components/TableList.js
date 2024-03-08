@@ -1,5 +1,4 @@
 import { Tree } from "primereact/tree"
-import { guid } from "../utils/guid"
 import { useEffect, useState } from "react"
 
 const ipcRenderer = window.ipcRender
@@ -28,7 +27,7 @@ function TableList({tableSelect}) {
     }, [])
     return (
         <div className="card flex justify-content-center left-side">
-            <Tree filter filterMode="lenient" value={nodes} selectionMode="single" onSelect={onselect} className="w-full md:w-30rem table-list"/>
+            <Tree filter filterMode="lenient" value={nodes} selectionMode="single" onSelect={onselect} emptyMessage = "No tables found" className="w-full md:w-30rem table-list"/>
         </div>
     )
 }

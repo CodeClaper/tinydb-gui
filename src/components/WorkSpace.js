@@ -1,4 +1,5 @@
 import QueryWork from "./QueryWorker"
+import CreateTableWorker from "./CreateTableWorker"
 import { Tabs, Empty } from 'antd'
 
 function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
@@ -21,7 +22,8 @@ function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
                             items={workers}
                         />
                         {
-                            workers.map(worker => { return activeKey === worker.key && <QueryWork key={worker.key} worker={worker} updateWorker={updateWorker}/>})
+                            workers.map(worker => { return activeKey === worker.key 
+                                && ((worker.type === 'QUERY' || worker.type === 'SELECTION') && <QueryWork key={worker.key} worker={worker} updateWorker={updateWorker}/> || worker.type === 'CREATE' && <CreateTableWorker/>)})
                         }
                     </>
                 )

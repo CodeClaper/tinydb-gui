@@ -4,6 +4,7 @@ import TableList from "./TableList"
 import TopBar from "./TopBar"
 import WorkSpace from "./WorkSpace"
 import { guid } from "../utils/guid"
+import StatusLine from "./StatusLine"
 
 
 function Home() {
@@ -29,7 +30,6 @@ function Home() {
 
     /* Update the worker. */
     const updateWorker = (worker) => {
-        debugger
         const newWorkers = workers.map(it => {
             if (it.key === worker.key)
                 return worker
@@ -73,8 +73,9 @@ function Home() {
                     <TableList tableSelect={tableSelect}/>
                     <WorkSpace activeKey={activeKey}  workers={workers} removeWorker={removeWorker} onChange={onChange} updateWorker={updateWorker}/>
                 </div>
+                <StatusLine connected={window.conn && window.conn.connected}/>
             </div>
-            <Message/>
+            <Message reload={updateWorker}/>
         </>
     )
 }

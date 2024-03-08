@@ -22,6 +22,7 @@ function TopBar({addWorker}) {
                 addWorker({
                     key: guid(),
                     label: ' 查询 ',
+                    closable: true,
                     type: 'QUERY',
                     sql: '',
                     data: '',

@@ -36,7 +36,10 @@ function QueryWork({worker, updateWorker}) {
             }
             worker.isLoading = true
             updateWorker(worker)
-            ipcRenderer.invoke('execSql', worker)
+            ipcRenderer.invoke('execSql', {
+                ...worker,
+                conn: window.conn
+            })
         } else {
             toast.current.show(
                 { severity: 'error', summary: 'Info', detail: '请先连接数据库' }

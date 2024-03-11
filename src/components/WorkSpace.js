@@ -7,6 +7,16 @@ function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
         if (action === 'remove') 
             removeWorker(targetKey)
     }
+    const workerPanels = workers.map(worker=> {
+        switch(worker.type) {
+            case 'QUERY':
+            case 'SELECTION':
+                return activeKey === worker.key && (<QueryWork key={worker.key} worker={worker} updateWorker={updateWorker} />)
+            case 'CREATE':
+                return activeKey === worker.key && (<CreateTableWorker key={worker.key}/>)
+                
+        }
+    })
     return (
         <div className="work-space">
             {
@@ -20,10 +30,7 @@ function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
                             onEdit={onEdit}
                             items={workers}
                         />
-                        {
-                            workers.map(worker => { return activeKey === worker.key 
-                                && ((worker.type === 'QUERY' || worker.type === 'SELECTION') && <QueryWork key={worker.key} worker={worker} updateWorker={updateWorker}/> || worker.type === 'CREATE' && <CreateTableWorker key={worker.key}/>)})
-                        }
+                        { workerPanels }
                     </>
                 )
             }

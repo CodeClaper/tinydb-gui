@@ -3,6 +3,7 @@ const path = require('path')
 const isDev = require('electron-is-dev')
 const { ipcMain } = require('electron')
 const net = require('net')
+const { throws } = require('assert')
 var socket = undefined
 
 const createWindow = () => {
@@ -74,6 +75,7 @@ ipcMain.handle('showTables', (event, message) => {
         newSocket(event, message)
     }
     socket.write("show tables")
+    socket.removeAllListeners('data')
     socket.on('data', (buff) => {
         var str = cleanBuffer(buff)
         if (str.toUpperCase().endsWith("OVER")) {
@@ -90,15 +92,48 @@ ipcMain.handle('showTables', (event, message) => {
     })
 })
 
+
+const sockerList = []
+
+function getOrCreateSocket(worker) {
+    for (let i = 0; i < sockerList.length; i++) {
+        if (sockerList[i].workerId === worker.key) {
+            console.log('find')
+            return sockerList[i].client
+        }
+    }
+    const client = new net.Socket()
+    client.connect(worker.conn.port, worker.conn.host)
+    sockerList.push({
+        workerId: worker.key,
+        client: client
+    })
+    console.log('create')
+    return client;
+}
+
+function removeSocket(workerKey) {
+    for(let i = 0; i < sockerList.length; i++) {
+        if (sockerList[i].workerId === worker.key) {
+            const client = sockerList[i].client
+            client.end()
+            sockerList.splice(i, 1)
+            return true
+        }
+    }
+    return false
+}
+
 /**
  * Execute Sql
  * */
 ipcMain.handle('execSql', (event, message) => {
+    const client = getOrCreateSocket(message)
     var buffer = ''
-    if (socket) {
-        socket.write(message.sql)
-        socket.removeAllListeners('data')
-        socket.on('data', (buff) => {
+    if (client) {
+        client.write(message.sql)
+        //client.removeAllListeners('data')
+        client.on('data', (buff) => {
             var str = cleanBuffer(buff)
             if (str.toUpperCase().endsWith("OVER")) {
                 buffer = buffer.concat(str.replace("OVER", ""))
@@ -109,6 +144,8 @@ ipcMain.handle('execSql', (event, message) => {
             else
                 buffer = buffer.concat(str)
         })
+    } else {
+        throw new Error('Not found socket client')
     }
 })
 

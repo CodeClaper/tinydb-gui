@@ -3,7 +3,6 @@ const path = require('path')
 const isDev = require('electron-is-dev')
 const { ipcMain } = require('electron')
 const net = require('net')
-const { throws } = require('assert')
 var socket = undefined
 
 const createWindow = () => {
@@ -92,38 +91,6 @@ ipcMain.handle('showTables', (event, message) => {
     })
 })
 
-
-const sockerList = []
-
-function getOrCreateSocket(worker) {
-    for (let i = 0; i < sockerList.length; i++) {
-        if (sockerList[i].workerId === worker.key) {
-            console.log('find')
-            return sockerList[i].client
-        }
-    }
-    const client = new net.Socket()
-    client.connect(worker.conn.port, worker.conn.host)
-    sockerList.push({
-        workerId: worker.key,
-        client: client
-    })
-    console.log('create')
-    return client;
-}
-
-function removeSocket(workerKey) {
-    for(let i = 0; i < sockerList.length; i++) {
-        if (sockerList[i].workerId === worker.key) {
-            const client = sockerList[i].client
-            client.end()
-            sockerList.splice(i, 1)
-            return true
-        }
-    }
-    return false
-}
-
 /**
  * Execute Sql
  * */
@@ -149,6 +116,42 @@ ipcMain.handle('execSql', (event, message) => {
     }
 })
 
+/*
+ * Close Socket Client.
+ * */
+ipcMain.handle('closeClient', (event, workerKey) => {
+    removeSocket(workerKey)
+})
+
+const sockerList = []
+
+function getOrCreateSocket(worker) {
+    for (let i = 0; i < sockerList.length; i++) {
+        if (sockerList[i].workerId === worker.key) {
+            return sockerList[i].client
+        }
+    }
+    const client = new net.Socket()
+    client.connect(worker.conn.port, worker.conn.host)
+    sockerList.push({
+        workerId: worker.key,
+        client: client
+    })
+    return client;
+}
+
+function removeSocket(workerKey) {
+    debugger
+    for(let i = 0; i < sockerList.length; i++) {
+        if (sockerList[i].workerId === workerKey) {
+            const client = sockerList[i].client
+            client.end()
+            sockerList.splice(i, 1)
+            return true
+        }
+    }
+    return false
+}
 
 /**
  * Clean buffer and Get String. 

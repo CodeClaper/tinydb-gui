@@ -5,8 +5,8 @@ import TopBar from "./TopBar"
 import WorkSpace from "./WorkSpace"
 import { guid } from "../utils/guid"
 import StatusLine from "./StatusLine"
-import { listeners } from "process"
 
+const ipcRenderer = window.ipcRender
 
 function Home() {
     const [activeKey, setActiveKey] = useState('')
@@ -27,6 +27,7 @@ function Home() {
             setActiveKey(key)
         }
         setWorkers(newWorkers)
+        ipcRenderer.invoke('closeClient', targetKey)
     }
 
     /* Update the worker. */

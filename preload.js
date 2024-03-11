@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('ipcRender', {
         })
     },
     invoke: (channel, args) => {
-        if (['createSocket', 'showTables', 'execSql'].includes(channel)) {
+        if (['createSocket', 'showTables', 'execSql', 'closeClient'].includes(channel)) {
             ipcRenderer.invoke(channel, args)
         }
     }

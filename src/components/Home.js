@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Message from "./Message"
 import TableList from "./TableList"
 import TopBar from "./TopBar"
 import WorkSpace from "./WorkSpace"
 import { guid } from "../utils/guid"
 import StatusLine from "./StatusLine"
+import { listeners } from "process"
 
 
 function Home() {
     const [activeKey, setActiveKey] = useState('')
-    const [workers, setWorkers] = useState([])
+    const [workers, setWorkers] = useState(sessionStorage.getItem('workers')||[])
 
     /* Add a worker, may be QueryWorker or CreateTableWorker. */
     const addWorker = (worker) => {
@@ -38,7 +39,9 @@ function Home() {
                 return it
         })
         setWorkers(newWorkers)
+        sessionStorage.setItem('workers', newWorkers)
     }
+
 
     /* When table selection trigger a QueryWorker, 
      * if already exist, set it active.*/

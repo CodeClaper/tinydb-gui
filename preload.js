@@ -6,12 +6,9 @@ contextBridge.exposeInMainWorld('ipcRender', {
         ipcRenderer.send(channel, args)
     },
     receive: (channel, listener) => {
-        if (!channels.includes(channel)) {
-            ipcRenderer.on(channel, (event, args) => {
-                listener(event, args)
-            })
-            channels.push(channel)
-        }
+        ipcRenderer.on(channel, (event, args) => {
+            listener(event, args)
+        })
     },
     invoke: (channel, args) => {
         if (['createSocket', 'showTables', 'execSql'].includes(channel)) {

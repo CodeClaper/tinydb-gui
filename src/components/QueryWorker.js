@@ -75,11 +75,14 @@ function QueryWork({worker, updateWorker}) {
         }
     }, [worker])
 
-    ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
-        handleResp(message)
-        worker.isLoading = false
-        updateWorker(worker)
-    })
+    useEffect(() => {
+        ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
+            handleResp(message)
+            worker.isLoading = false
+            updateWorker(worker)
+        })
+    }, [])
+
     useEffect(() => {
         if (worker.trigger) {
             worker.trigger = false

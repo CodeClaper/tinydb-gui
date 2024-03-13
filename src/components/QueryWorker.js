@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Controlled as CodeMirror} from 'react-codemirror2';
 import { Button } from 'primereact/button'
 import { Toast } from 'primereact/toast';
@@ -26,6 +26,8 @@ const ipcRenderer = window.ipcRender
 function QueryWork({worker, updateWorker}) {
     const toast = useRef(null)
     const sqlRef = useRef(null)
+    const [isSelected, setIsSelected] = useState(false)
+    const [selectedSql, setSelectedSql] = useState('')
     const execSql = () => {
         if (window.conn && window.conn.connected) {
             if (worker.sql === '') {
@@ -36,21 +38,45 @@ function QueryWork({worker, updateWorker}) {
             }
             worker.isLoading = true
             updateWorker(worker)
-            ipcRenderer.invoke('execSql', {
-                ...worker,
-                conn: window.conn
-            })
+            if (isSelected)
+                ipcRenderer.invoke('execSql', {
+                    ...worker,
+                    sql: selectedSql,
+                    conn: window.conn
+                })
+            else
+                ipcRenderer.invoke('execSql', {
+                    ...worker,
+                    conn: window.conn
+                })
         } else {
             toast.current.show(
                 { severity: 'error', summary: 'Info', detail: '请先连接数据库' }
             )
         }
     }
-
+    
+    /* Trigger when sql editor change. */
     const onSqlChange = (editor, data, value) => {
         worker.sql = value
         updateWorker(worker)
     }
+
+    /* Trigger when sql editor selection change. */
+    const onSelection = (editor, data) => {
+        /* Make sure after react view render, then get selection text. */
+        window.requestAnimationFrame(() => {
+            const selectText = editor.doc.getSelection()
+            if (selectText) {
+                setIsSelected(true)
+                setSelectedSql(selectText)
+            } else {
+                setIsSelected(false)
+            }
+        })
+    }
+
+    /* Handler response data. */
     const handleResp = (body) => {
         if (body === '')
             return
@@ -105,8 +131,9 @@ function QueryWork({worker, updateWorker}) {
                         lineWrapping: true
                     }}
                     onBeforeChange={onSqlChange}
+                    onSelection={onSelection}
                 />
-                <Button label="执行" onClick={ execSql } size="small" style={{ marginLeft: '10px'}}/>
+                <Button label={isSelected ? '运行已选择的': '运行'} onClick={ execSql } size="small" style={{ marginLeft: '10px'}}/>
             </div>
             { worker.isLoading && window.conn.connected && (<div className='loading-json-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
             { (!worker.isLoading || !window.conn.connected) && (

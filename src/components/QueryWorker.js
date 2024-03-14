@@ -3,6 +3,7 @@ import { Controlled as CodeMirror} from 'react-codemirror2';
 import { Button } from 'primereact/button'
 import { Toast } from 'primereact/toast';
 import Loading from 'react-loading'
+import MenuBar from './MenuBar';
 
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
@@ -20,6 +21,7 @@ import 'codemirror/addon/fold/foldcode'
 import 'codemirror/addon/fold/foldgutter' 
 import 'codemirror/addon/fold/brace-fold'
 import 'codemirror/addon/fold/foldgutter.css'
+import { guid } from '../utils/guid';
 
 const ipcRenderer = window.ipcRender
 
@@ -28,6 +30,10 @@ function QueryWork({worker, updateWorker}) {
     const sqlRef = useRef(null)
     const [isSelected, setIsSelected] = useState(false)
     const [selectedSql, setSelectedSql] = useState('')
+    const menuItems = [
+        { id: guid(), label: '保存', icon: 'pi pi-save', click: () => { alert('bingo')}},
+        { id: guid(), label: isSelected ? '运行选中内容' : '运行', icon: 'pi pi-play', click: () => { execSql() }}
+    ]
     const execSql = () => {
         if (window.conn && window.conn.connected) {
             if (worker.sql === '') {
@@ -82,15 +88,29 @@ function QueryWork({worker, updateWorker}) {
             return
         try {
             const jsonBody = JSON.parse(body)
-            if (jsonBody.success)
-                worker.data = JSON.stringify(jsonBody.data, null, '\t')
-            else
-                worker.data = '{}'
-            const msg = '结果: ' + (jsonBody.success ? 'OK' : 'ERROR') + '\n' +
-                        '信息: ' + jsonBody.message + '\n' +
-                        '用时: ' + jsonBody.duration + 's\n' + 
-                        (jsonBody.rows ? '行数: ' + jsonBody.rows : '') 
-            worker.message = msg
+            if (Array.isArray(jsonBody)) {
+                const sqlArry = worker.sql.split(/;[\n]?/)
+                let msg = ''
+                for (let i = 0; i < jsonBody.length; i++) {
+                    const item = jsonBody[i]
+                    msg = msg.concat(sqlArry[i] + '\n',
+                        '结果: ' + (item.success ? 'OK' : 'ERROR') + '\n', 
+                        '信息: ' + item.message + '\n',
+                        '用时: ' + item.duration + 's\n',
+                        (item.rows ? '行数: ' + item.rows : '') + '\n\n')
+                }
+                worker.message = msg
+            } else {
+                if (jsonBody.success)
+                    worker.data = JSON.stringify(jsonBody.data, null, '\t')
+                else
+                    worker.data = ''
+                const msg = '结果: ' + (jsonBody.success ? 'OK' : 'ERROR') + '\n' +
+                            '信息: ' + jsonBody.message + '\n' +
+                            '用时: ' + jsonBody.duration + 's\n' + 
+                            (jsonBody.rows ? '行数: ' + jsonBody.rows : '') 
+                worker.message = msg
+            }
         } catch (err) {
             worker.message = err
         }
@@ -117,6 +137,7 @@ function QueryWork({worker, updateWorker}) {
     }, [worker])
     return (
         <>
+            <MenuBar menuItems={menuItems}/> 
             <div className="sql-space">
                 <CodeMirror
                     className="sql-input"
@@ -133,7 +154,6 @@ function QueryWork({worker, updateWorker}) {
                     onBeforeChange={onSqlChange}
                     onSelection={onSelection}
                 />
-                <Button label={isSelected ? '运行已选择的': '运行'} onClick={ execSql } size="small" style={{ marginLeft: '10px'}}/>
             </div>
             { worker.isLoading && window.conn.connected && (<div className='loading-json-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
             { (!worker.isLoading || !window.conn.connected) && (

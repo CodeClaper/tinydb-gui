@@ -29,6 +29,7 @@ function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
                             type="editable-card"
                             onEdit={onEdit}
                             items={workers}
+                            size="small"
                         />
                         { workerPanels }
                     </>

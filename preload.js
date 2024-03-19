@@ -1,14 +1,17 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-const channels = []
 contextBridge.exposeInMainWorld('ipcRender', {
     send: (channel, args) => {
         ipcRenderer.send(channel, args)
     },
     receive: (channel, listener) => {
-        ipcRenderer.on(channel, (event, args) => {
-            listener(event, args)
-        })
+        return ipcRenderer.on(channel, listener) 
+    },
+    once: (channel, listener) => {
+        ipcRenderer.once(channel, listener) 
+    },
+    off: (channel, listener) => {
+        ipcRenderer.removeListener(channel, listener)
     },
     invoke: (channel, args) => {
         if (['createSocket', 'showTables', 'execSql', 'closeClient'].includes(channel)) {

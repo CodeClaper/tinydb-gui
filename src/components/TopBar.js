@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import MenuButton from "./MenuButton"
-import { faLink, faSquarePlus, faMagnifyingGlassPlus } from '@fortawesome/free-solid-svg-icons'
+import { faLink, faSquarePlus, faMagnifyingGlassPlus, faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import Connector from "./Connector"
 import { guid } from "../utils/guid"
 
@@ -21,12 +21,15 @@ function TopBar({addWorker}) {
             onClick: () => {
                 addWorker({
                     key: guid(),
-                    label: ' 查询 ',
+                    label: '查询编辑器',
                     closable: true,
                     type: 'QUERY',
                     sql: '',
-                    data: '',
+                    data: [],
                     message: '',
+                    tabs: [
+                        { key: 0, label: '消息' }
+                    ],
                     isLoading: false
                 })
             }
@@ -41,6 +44,14 @@ function TopBar({addWorker}) {
                     label: ' 新建表 ',
                     type: 'CREATE'
                 })
+            }
+        },
+        {
+            id: "004",
+            name: "打开文件",
+            icon: faFolderOpen,
+            onClick: () => {
+                alert('bingo')
             }
         }
     ]

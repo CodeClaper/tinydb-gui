@@ -30,6 +30,7 @@ function WorkSpace({activeKey, workers, onChange, removeWorker, updateWorker}) {
                             onEdit={onEdit}
                             items={workers}
                             size="small"
+                            className="header-tabs"
                         />
                         { workerPanels }
                     </>

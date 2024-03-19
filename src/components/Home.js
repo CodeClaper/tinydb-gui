@@ -57,8 +57,11 @@ function Home() {
                 label: tableName,
                 type: 'SELECTION',
                 sql: sql,
-                data: '',
+                data: [],
                 message: '',
+                tabs: [
+                    { key: 0, label: '消息' }
+                ],
                 isLoading: false,
                 trigger: true
             })

@@ -1,9 +1,9 @@
-import { Button } from "primereact/button"
+import { Button } from 'antd'
 
 function MenuBar({menuItems}) {
 
     const menuButtons = menuItems.map(menu => {
-        return <Button key={menu.id} label={menu.label} severity="success" icon={menu.icon} iconPos="left" text size="small" unstyled className="menu-bar-button" onClick={menu.click}/>
+        return <Button key={menu.id} type="default" icon={menu.icon} onClick={menu.click}>{menu.label}</Button>
     })
 
     return (<div className="menu-bar">{menuButtons}</div>)

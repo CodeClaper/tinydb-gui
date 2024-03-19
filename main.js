@@ -99,7 +99,7 @@ ipcMain.handle('execSql', (event, message) => {
     var buffer = ''
     if (client) {
         client.write(message.sql)
-        //client.removeAllListeners('data')
+        client.removeAllListeners('data')
         client.on('data', (buff) => {
             var str = cleanBuffer(buff)
             if (str.toUpperCase().endsWith("OVER")) {

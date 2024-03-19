@@ -69,6 +69,7 @@
     }
   },
   "dependencies": {
+    "@ant-design/icons": "^5.3.3",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-sql": "^6.6.0",
     "@codemirror/lint": "^6.5.0",

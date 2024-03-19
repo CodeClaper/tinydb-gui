@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Controlled as CodeMirror} from 'react-codemirror2';
-import { Button } from 'primereact/button'
 import { Toast } from 'primereact/toast';
+import { guid } from '../utils/guid';
+import { Tabs } from 'antd';
 import Loading from 'react-loading'
 import MenuBar from './MenuBar';
+import { PlayCircleOutlined, SaveOutlined } from '@ant-design/icons'
 
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
@@ -21,7 +23,6 @@ import 'codemirror/addon/fold/foldcode'
 import 'codemirror/addon/fold/foldgutter' 
 import 'codemirror/addon/fold/brace-fold'
 import 'codemirror/addon/fold/foldgutter.css'
-import { guid } from '../utils/guid';
 
 const ipcRenderer = window.ipcRender
 
@@ -30,11 +31,14 @@ function QueryWork({worker, updateWorker}) {
     const sqlRef = useRef(null)
     const [isSelected, setIsSelected] = useState(false)
     const [selectedSql, setSelectedSql] = useState('')
+    const [activeKey, setActiveKey] = useState(0)
     const menuItems = [
-        { id: guid(), label: '保存', icon: 'pi pi-save', click: () => { alert('bingo')}},
-        { id: guid(), label: isSelected ? '运行选中内容' : '运行', icon: 'pi pi-play', click: () => { execSql() }}
+        { id: guid(), label: '保存', icon: <SaveOutlined />, click: () => { alert('bingo')}},
+        { id: guid(), label: isSelected ? '运行选中内容' : '运行', icon: <PlayCircleOutlined />, click: () => { execSql() }}
     ]
     const execSql = () => {
+        worker.tabs.splice(1, worker.tabs.length)
+        worker.data = []
         if (window.conn && window.conn.connected) {
             if (worker.sql === '') {
                 toast.current.show(
@@ -44,17 +48,21 @@ function QueryWork({worker, updateWorker}) {
             }
             worker.isLoading = true
             updateWorker(worker)
-            if (isSelected)
+            if (isSelected) {
+                worker.sqlArry = selectedSql.split(/;[\n]?/)
                 ipcRenderer.invoke('execSql', {
                     ...worker,
                     sql: selectedSql,
                     conn: window.conn
                 })
-            else
+            }
+            else {
+                worker.sqlArry = worker.sql.split(/;[\n]?/)
                 ipcRenderer.invoke('execSql', {
                     ...worker,
                     conn: window.conn
                 })
+            }
         } else {
             toast.current.show(
                 { severity: 'error', summary: 'Info', detail: '请先连接数据库' }
@@ -89,31 +97,41 @@ function QueryWork({worker, updateWorker}) {
         try {
             const jsonBody = JSON.parse(body)
             if (Array.isArray(jsonBody)) {
-                const sqlArry = worker.sql.split(/;[\n]?/)
                 let msg = ''
-                for (let i = 0; i < jsonBody.length; i++) {
+                for (let i = 0, j = 1; i < jsonBody.length; i++) {
                     const item = jsonBody[i]
-                    msg = msg.concat(sqlArry[i] + '\n',
+                    msg = msg.concat(worker.sqlArry[i] + '\n',
                         '结果: ' + (item.success ? 'OK' : 'ERROR') + '\n', 
                         '信息: ' + item.message + '\n',
                         '用时: ' + item.duration + 's\n',
-                        (item.rows ? '行数: ' + item.rows : '') + '\n\n')
+                        (item.rows || jsonBody.rows === 0 ? '行数: ' + item.rows : '') + '\n\n')
+                    if (item.success && item.data) {
+                        worker.data.push(JSON.stringify(item.data, null, '\t'))
+                        worker.tabs.push({
+                            key: j,
+                            label: `数据 ${j++}`
+                        })
+                    }
                 }
                 worker.message = msg
             } else {
-                if (jsonBody.success)
-                    worker.data = JSON.stringify(jsonBody.data, null, '\t')
-                else
-                    worker.data = ''
+                if (jsonBody.success && jsonBody.data) {
+                    worker.data.push(JSON.stringify(jsonBody.data, null, '\t'))
+                    worker.tabs.push({
+                        key: 1,
+                        label: '数据1'
+                    })
+                }
                 const msg = '结果: ' + (jsonBody.success ? 'OK' : 'ERROR') + '\n' +
                             '信息: ' + jsonBody.message + '\n' +
                             '用时: ' + jsonBody.duration + 's\n' + 
-                            (jsonBody.rows ? '行数: ' + jsonBody.rows : '') 
+                            (jsonBody.rows || jsonBody.rows === 0 ? '行数: ' + jsonBody.rows : '') 
                 worker.message = msg
             }
         } catch (err) {
             worker.message = err
         }
+        setActiveKey(worker.tabs.length - 1)
     }
     useEffect(() => {
         if (sqlRef.current) {
@@ -122,11 +140,15 @@ function QueryWork({worker, updateWorker}) {
     }, [worker])
 
     useEffect(() => {
-        ipcRenderer.receive(`${worker.key}_data`, (event, message) => {
-            handleResp(message)
-            worker.isLoading = false
+        const listener = (event, message) => {
+            if (worker.isLoading) {
+                handleResp(message)
+                worker.isLoading = false
+            }
             updateWorker(worker)
-        })
+        }
+        ipcRenderer.receive(`${worker.key}_data`, listener)
+        return () => { ipcRenderer.off(`${worker.key}_data`, listener)}
     }, [])
 
     useEffect(() => {
@@ -135,6 +157,7 @@ function QueryWork({worker, updateWorker}) {
             execSql()
         }
     }, [worker])
+
     return (
         <>
             <MenuBar menuItems={menuItems}/> 
@@ -146,6 +169,7 @@ function QueryWork({worker, updateWorker}) {
                     options={{
                         mode: 'text/x-sql',
                         theme: 'default',
+                        lineNumbers: true,
                         tabSize: 4,
                         autoCloseBrackets: false,
                         autoRefresh: false,
@@ -157,30 +181,43 @@ function QueryWork({worker, updateWorker}) {
             </div>
             { worker.isLoading && window.conn.connected && (<div className='loading-json-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
             { (!worker.isLoading || !window.conn.connected) && (
-                <CodeMirror
-                    className='json-space'
-                    value={worker.data}
-                    options={{
-                        lineNumbers: true,
-                        mode: { name : 'application/json', json: true, statementIndent: 2},
-                        theme: 'default',
-                        gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers', 'CodeMirror-lint-markers'],
-                        lint: true,
-                        lineWrapping: false,
-                        identWithTabs: false,
-                        autoCloseTags: true,
-                        autoCloseBrackets: true,
-                        matchBrackets: true,
-                        matchTags: true,
-                        tabSize: 2,
-                        readOnly: true
-                    }}
-                />
-            )}
-            { worker.isLoading && (<div className='loading-message-space'><Loading type="bars" color="#00BFFF" height={80} width={80} /></div>)}
-            { !worker.isLoading && (
-                <div className='message-space'>
-                    <textarea value={worker.message} readOnly className='message-input'/>
+                <div className='result-space'>
+                    <Tabs 
+                        activeKey={activeKey}
+                        items={worker.tabs}
+                        type="card"
+                        onChange={setActiveKey}
+                    />
+                    {   activeKey === 0 && (
+                        <div className='message-space'>
+                            <textarea value={worker.message} readOnly className='message-input'/>
+                        </div>)
+                    }
+                    {
+                        worker.data.map((data, index) => {
+                            return activeKey === (index + 1) && (
+                            <CodeMirror
+                                key={index}
+                                className='json-space'
+                                value={data}
+                                options={{
+                                    lineNumbers: true,
+                                    mode: {name : 'application/json', json: true, statementIndent: 2},
+                                    theme: 'default',
+                                    gutters: ['CodeMirror-foldgutter', 'CodeMirror-linenumbers', 'CodeMirror-lint-markers'],
+                                    lint: true,
+                                    lineWrapping: false,
+                                    identWithTabs: false,
+                                    autoCloseTags: true,
+                                    autoCloseBrackets: true,
+                                    matchBrackets: true,
+                                    matchTags: true,
+                                    tabSize: 2,
+                                    readOnly: true
+                                }}
+                            />)
+                        })
+                    }
                 </div>
             )}
             <Toast ref={toast} />

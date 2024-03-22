@@ -131,7 +131,7 @@ function QueryWork({worker, updateWorker}) {
         } catch (err) {
             worker.message = err
         }
-        setActiveKey(worker.tabs.length - 1)
+        setActiveKey(worker.tabs.length > 0 ? worker.tabs.length - 1 : 0)
     }
     useEffect(() => {
         if (sqlRef.current) {

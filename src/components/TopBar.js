@@ -41,7 +41,7 @@ function TopBar({addWorker}) {
             onClick: () => {
                 addWorker({
                     key: guid(),
-                    label: ' 新建表 ',
+                    label: '表编辑器',
                     type: 'CREATE'
                 })
             }

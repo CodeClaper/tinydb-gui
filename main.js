@@ -132,6 +132,9 @@ function getOrCreateSocket(worker) {
         }
     }
     const client = new net.Socket()
+    client.writableLength = 1024
+    client.bytesRead = 1024
+    client.bytesWritten = 1024
     client.connect(worker.conn.port, worker.conn.host)
     sockerList.push({
         workerId: worker.key,
@@ -141,7 +144,6 @@ function getOrCreateSocket(worker) {
 }
 
 function removeSocket(workerKey) {
-    debugger
     for(let i = 0; i < sockerList.length; i++) {
         if (sockerList[i].workerId === workerKey) {
             const client = sockerList[i].client
@@ -153,17 +155,16 @@ function removeSocket(workerKey) {
     return false
 }
 
+
 /**
  * Clean buffer and Get String. 
  */
 function cleanBuffer(buff) {
-    var resultBuffer = Buffer.alloc(0);
 
-    for (let i = 0; i < buff.length; i++) {
-        const byte = buff.readUint8(i)
-        if (byte !== 0x00)
-            resultBuffer = Buffer.concat([resultBuffer, Buffer.from([byte])])
-    }
+    const decoder = new TextDecoder('utf-8'); // 创建 TextDecoder 对象
+    
+    const bytes = buff.filter(it => it !== 0x00)
 
-    return resultBuffer.toString('utf-8')
+    return decoder.decode(bytes);
+
 }
